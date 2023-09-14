@@ -9,7 +9,6 @@
 
 using namespace std;
 
-int currSong = 0;
 string songName;
 int dur;
 
@@ -18,26 +17,33 @@ MusicPlayer::MusicPlayer(string name) {
     cout << "Playing in Spotify...\n";
 }
 
-void MusicPlayer::Pause() {
-    paused = true;
+void printDots(int time, string name) {
+    cout << name;
+    for (int i = 0; i < time; ++i) {
+        cout << ".";
+        this_thread::sleep_for(chrono::seconds(1));
+    }
+    cout << endl;
+    return;
 }
+void MusicPlayer::Play(std::string name, int time) {
+    cout << "-----------------------------------------" << endl;
+    cout << "Current Song: " << name << endl;
+    cout << "-----------------------------------------" << endl;
 
-bool MusicPlayer::Play(std::string name, int time) {
-    cout << "Playing " + name << " ";
-
-    for (int i = 0; i < time && !stopped; ++i) {
+    for (int i = 0; i < time ; ++i) {
         std::cout << ".";
         std::cout.flush();
         std::this_thread::sleep_for(std::chrono::seconds(1));// Sleep for 1 second
     }
 
-    if(!paused) {
-        cout << "Playing next\n";
-        currSong++;
-        stopped = true;
-    }
-
-    return !paused;
+//    if(!paused) {
+//        cout << "Playing next\n";
+//        currSong++;
+//        stopped = true;
+//    }
+//
+//    return !paused;
 }
 
 void MusicPlayer::Spotify() {
@@ -61,49 +67,67 @@ void MusicPlayer::Spotify() {
         openplaylist_file.close();
     }
 
+    if(songs.empty()) {
+        cout << "No songs in your in playlist...\n";
+        return;
+    }
+
+    int currSong = 0;
+    int remaining_time = 0;
+    bool isPlaying = false;
+    bool first = false;
     while(true) {
-        cout << "1. Play\n2. Pause\n3. Next\n4. Prev\n5. Exit\n";
-        cout << "Chose one" << endl;
+
+        if(first) {
+            cout << "-----------------------------------------" << endl;
+            cout << "Current Song: " << songs[currSong].first << endl;
+            cout << "-----------------------------------------" << endl;
+
+        }
+
+//        if (isPlaying) {
+//            cout << "Playing: ";
+//            printDots(remaining_time * 2,"PLAYING");
+//            remaining_time = 0;
+//        }
+
+        cout << "1. Play/Pause\n2. Next\n3. Prev\n4. Exit\n";
+        cout << "Chose one " ;
 
         int ch;
         cin >> ch;
 
         switch (ch) {
             case 1: {
-                if(songs.empty()) {
-                    cout << "There are no songs in your current playlist...\nPlease add songs...";
-                    return;
+                isPlaying = ~isPlaying;
+                first = true;
+                if (!isPlaying) {
+                    cout << "Paused" << endl;
+                } else {
+                    //cout << "Playing" << endl;
+                    remaining_time = songs[currSong].second;
+                    printDots(remaining_time,"PLAYING");
                 }
-                songName = songs[currSong].first;
-                dur = songs[currSong].second;
-                Play(songName,dur);
                 break;
             }
             case 2: {
-                Pause();
+                currSong = (currSong + 1) % songs.size();
+                isPlaying = false;
+                remaining_time = 0;
                 break;
             }
             case 3: {
-                currSong = (currSong + 1) % 4;
-                songName = songs[currSong].first;
-                dur = songs[currSong].second;
-                Play(songName,dur);
+                currSong = (currSong - 1 + songs.size()) % songs.size();
+                isPlaying = false;
+                remaining_time = 0;
                 break;
             }
             case 4: {
-                if(currSong == 0) {
-                    currSong = songs.size();
-                }
-                currSong = (currSong - 1);
-                songName = songs[currSong].first;
-                dur = songs[currSong].second;
-                Play(songName,dur);
-                break;
-            }
-            default: {
-                cout << "thank you...\n";
+                cout << "-------------Exiting from spotify-------------\n";
                 return;
             }
+            default:
+                return;
         }
     }
 }
