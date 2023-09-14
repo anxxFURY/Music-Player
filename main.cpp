@@ -16,17 +16,28 @@ void waiting_animation(int n,string s) {
         std::cout.flush();
         std::this_thread::sleep_for(std::chrono::seconds(1)); // Sleep for 1 second
     }
+    cout << endl;
+}
+
+void displayPlayLists(set<string> playlists) {
+
+    if(playlists.empty()) {
+        cout << "No playlists created yet...\n";
+    }
+
+    for(string it : playlists) {
+        cout <<"1. " <<it << endl;
+    }
 }
 
 
 int main(int argc, char const *argv[]) {
-
     int i;
     i = 1;
     bool logged_in = false;
     string curr_user = "---Not Logged in---";
     string s;
-    vector<string> playlLists;
+    set<string> playlLists;
    while(i) {
        cout << "1: To login\n2: To Register\n3: Press any other key to exit\n";
        cin >> i;
@@ -72,14 +83,29 @@ int main(int argc, char const *argv[]) {
        exit(0);
    }
 
-   cout << "Welcome " + curr_user << endl;
+   cout << "\n--------------Welcome " + curr_user << "---------------------\n"<<  endl;
 
+   ifstream myPlayLists;
+   myPlayLists.open("allPlayLists.txt");
+
+   if(myPlayLists.is_open()) {
+       string line;
+
+       while (getline(myPlayLists,line)) {
+           playlLists.insert(line);
+       }
+
+       myPlayLists.close();
+   }
+   else {
+       cout << "Playlist file is not created...\n";
+   }
 
    int op = 1;
 
    while(op) {
        cout << "Chose--->\n";
-       cout << "1. Create Playlist\n2. Play Playlist\n3. Add songs\n4. Exit\n";
+       cout << "1. Create Playlist\n2. Play Playlist\n3. Add songs to existing playlist\n4. Exit\n";
 
        cin >> op;
 
@@ -93,7 +119,8 @@ int main(int argc, char const *argv[]) {
            if(allPlayLists.is_open()) {
                allPlayLists << playlistName << endl;
            }
-           playlLists.push_back(playlistName);
+
+           playlLists.insert(playlistName);
            Playlist new_playlist(playlistName);
            new_playlist.addSong();
        }
@@ -102,11 +129,14 @@ int main(int argc, char const *argv[]) {
                cout << "You have not created any playlists yet.\n";
            } else {
                cout << "Which playlist you want to play :\n";
-               for(string str : playlLists)
-                   cout << "1 :" + str << endl;
+               displayPlayLists(playlLists);
                string chose_playlist;
-               cin >> chose_playlist;
-               if(std::find(playlLists.begin(), playlLists.end(),chose_playlist) == playlLists.end()) {
+               int xx;
+               cin >> xx;
+               auto it = next(playlLists.begin(),xx - 1);
+               chose_playlist = *it;
+
+               if(playlLists.find(chose_playlist) == playlLists.end()) {
                    cout << "No such Playlists...\n Create one? (Y/N)";
                    char x;
                    cin >> x;
@@ -118,8 +148,8 @@ int main(int argc, char const *argv[]) {
                    }
                }
                else {
-                   cout << "Loading" + chose_playlist << endl;
-                   waiting_animation(5,"Loading");
+                   cout << "Loading " + chose_playlist << endl;
+                   waiting_animation(3,"");
                    MusicPlayer spotify(chose_playlist);
                    spotify.Spotify();
                }
@@ -127,11 +157,13 @@ int main(int argc, char const *argv[]) {
        }
        else if(op == 3) {
            cout << "Which playlist you want to add songs to :\n";
-           for(string str : playlLists)
-               cout << "1 :" + str << endl;
+           displayPlayLists(playlLists);
            string chose_playlist;
-           cin >> chose_playlist;
-           if(std::find(playlLists.begin(), playlLists.end(),chose_playlist) == playlLists.end()) {
+           int xx;
+           cin >> xx;
+           auto it = next(playlLists.begin(),xx - 1);
+           chose_playlist = *it;
+           if(playlLists.find(chose_playlist) == playlLists.end()) {
                cout << "No such Playlists...\n Create one? (Y/N)";
                char x;
                cin >> x;
